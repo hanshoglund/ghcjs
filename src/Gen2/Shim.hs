@@ -24,7 +24,7 @@ js:
 
 -}
 
-module Gen2.Shim where
+module Gen2.Shim(collectShims, collectShim, tryReadShimFile, readShimsArchive) where
 
 import           DynFlags
 import qualified SysTools
@@ -90,6 +90,7 @@ instance FromJSON VersionRange where
   parseJSON (String t) = maybe mempty pure (parseVersionRange t)
   parseJSON _          = mempty
 
+-- IONOTE Looks at shims repo
 collectShims :: FilePath                                    -- ^ the base path
              -> [(Text, Version)]                           -- ^ packages being linked
              -> IO ([FilePath], [FilePath])                 -- ^ files to load (with, after) rts
@@ -135,6 +136,7 @@ jsCppOpts opts = filter (/="-traditional") (removeCabalMacros opts)
     removeCabalMacros (x:xs) = x : removeCabalMacros xs
     removeCabalMacros []     = []
 
+-- IONOTE Looks at shims repo
 readShimsArchive :: DynFlags -> FilePath -> IO B.ByteString
 readShimsArchive dflags archive = do
   meta <- Ar.readMeta archive
@@ -152,6 +154,7 @@ readShimsArchive dflags archive = do
     B.readFile outfile
   return (mconcat srcs')
 
+-- IONOTE Looks at shims repo
 readShim :: FilePath -> (Pkg, Version) -> IO (Maybe Shim)
 readShim base (pkgName, pkgVer) = do
   checkShimsInstallation base
@@ -166,6 +169,7 @@ readShim base (pkgName, pkgVer) = do
            Right shim -> return shim
        else return Nothing
 
+-- IONOTE Looks at shims repo
 collectShim :: FilePath -> (Pkg, Version) -> IO [FilePath]
 collectShim base (pkgName, pkgVer) = do
   mbShim <- readShim base (pkgName, pkgVer)
@@ -173,6 +177,7 @@ collectShim base (pkgName, pkgVer) = do
     Just shim -> return (foldShim pkgName pkgVer shim)
     Nothing   -> return mempty
 
+-- IONOTE Looks at shims repo
 checkShimsInstallation :: FilePath -> IO ()
 checkShimsInstallation base = do
   e <- doesFileExist (base </> "base.yaml")
@@ -237,5 +242,3 @@ versionRangeToBuildDep (SingleVersion ver) = "== " <> showVersion ver
 versionRangeToBuildDep (Interval lo hi) = T.intercalate " && " $ catMaybes
                                                     [((">= " <>) . showVersion) <$> lo,
                                                      (("< "  <>) . showVersion) <$> hi]
-
-

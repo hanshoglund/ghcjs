@@ -158,11 +158,12 @@ buildingProf :: DynFlags -> Bool
 buildingProf dflags = WayProf `elem` ways dflags
 
 -- use instead of ErrUtils variant to prevent being suppressed
+-- IONOTE OK log only
 compilationProgressMsg :: DynFlags -> String -> IO ()
 compilationProgressMsg dflags msg
   = ifVerbose dflags 1 (log_action dflags dflags SevOutput ghcjsSrcSpan defaultUserStyle (text msg))
 
-ifVerbose :: DynFlags -> Int -> IO () -> IO ()
+ifVerbose :: Monad m => DynFlags -> Int -> m () -> m ()
 ifVerbose dflags val act
   | verbosity dflags >= val = act
   | otherwise               = return ()

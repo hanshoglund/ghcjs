@@ -11,7 +11,7 @@
     units with dependency information
 -}
 
-module Gen2.Linker where
+module Gen2.Linker(link, link', mkPackage, LinkResult(..)) where
 
 import           DynFlags
 import           Encoding
@@ -133,6 +133,7 @@ link :: DynFlags
      -> (Fun -> Bool)              -- ^ functions from the objects to use as roots (include all their deps)
      -> Set Fun                    -- ^ extra symbols to link in
      -> IO ()
+-- IONOTE output, include path for home package, extra JS files
 link dflags env settings out include pkgs objFiles jsFiles isRootFun extraStaticDeps
   | gsNoJSExecutables settings = return ()
   | otherwise = do
@@ -181,6 +182,7 @@ link' :: DynFlags
       -> (Fun -> Bool)              -- ^ functions from the objects to use as roots (include all their deps)
       -> Set Fun                    -- ^ extra symbols to link in
       -> IO LinkResult
+-- IONOTE output, include path for home package, extra JS files
 link' dflags env settings target include pkgs objFiles jsFiles isRootFun extraStaticDeps = do
       (objDepsMap, objRequiredUnits) <- loadObjDeps objFiles
       let rootSelector | Just baseMod <- gsGenBase settings =

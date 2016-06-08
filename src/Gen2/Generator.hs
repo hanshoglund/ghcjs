@@ -4,6 +4,7 @@
   Main generator module
 -}
 
+-- IONOTE pure
 module Gen2.Generator (generate) where
 
 import           Fingerprint
@@ -1591,7 +1592,7 @@ getObjectKeyValuePairs [] = Just []
 getObjectKeyValuePairs (k:v:xs)
   | Just t <- argJSStringLitUnfolding k =
       fmap ((t,v):) (getObjectKeyValuePairs xs)
-getObjectKeyValuePairs _ = Nothing                                     
+getObjectKeyValuePairs _ = Nothing
 
 argJSStringLitUnfolding :: StgArg -> Maybe Text
 argJSStringLitUnfolding (StgVarArg v)

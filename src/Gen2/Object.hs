@@ -29,6 +29,7 @@
    - closureinfo data (offsets described by index)
 -}
 
+-- IONOTE reads specified object file(s)
 module Gen2.Object ( object
                    , object'
                    , showDeps
@@ -170,7 +171,7 @@ instance NFData Fun where rnf x = x `seq` ()
 data Package = Package { packageName    :: !Text
                        , packageVersion :: !Text
                        }
--} 
+-}
 newtype Package = Package { unPackage :: Text }
   deriving (Eq, Ord, Show, Generic, NFData)
 instance DB.Binary Package
@@ -346,6 +347,7 @@ instance Objectable ExpFun where
 --   so it's potentially more efficient than readDeps <$> B.readFile file
 readDepsFile :: FilePath -> IO Deps
 readDepsFile file = withFile file ReadMode (hReadDeps file)
+-- IONOTE reads specified object file
 
 hReadDeps :: String -> Handle -> IO Deps
 hReadDeps name h = do
@@ -355,6 +357,7 @@ hReadDeps name h = do
     Right hdr -> do
       hSeek h RelativeSeek (fromIntegral $ symbsLen hdr)
       getDepsSection name <$> B.hGet h (fromIntegral $ depsLen hdr)
+-- IONOTE reads specified object file
 
 -- | call with contents of the file
 readDeps :: String -> ByteString -> Deps
@@ -368,6 +371,7 @@ readDeps name bs =
 -- | extract the linkable units from an object file
 readObjectFile :: FilePath -> IO [ObjUnit]
 readObjectFile = readObjectFileKeys (\_ _ -> True)
+-- IONOTE reads specified object file
 
 readObjectFileKeys :: (Int -> [Text] -> Bool) -> FilePath -> IO [ObjUnit]
 readObjectFileKeys p file = bracket (openBinaryFile file ReadMode) hClose $ \h -> do
@@ -379,6 +383,7 @@ readObjectFileKeys p file = bracket (openBinaryFile file ReadMode) hClose $ \h -
       hSeek h RelativeSeek (fromIntegral $ depsLen hdr)
       bsi <- B.fromStrict <$> BS.hGetContents h
       return $ readObjectKeys' file p (getSymbolTable bss) bsi (B.drop (fromIntegral $ idxLen hdr) bsi)
+-- IONOTE reads specified object file(s)
 
 readObject :: String -> ByteString -> [ObjUnit]
 readObject name = readObjectKeys name (\_ _ -> True)
@@ -831,4 +836,3 @@ instance Objectable StaticLit where
 instance Objectable BS.ByteString where
   put = lift . DB.put
   get = lift DB.get
-

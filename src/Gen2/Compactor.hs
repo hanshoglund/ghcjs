@@ -14,7 +14,8 @@
   - write all function metadata compactly
  -}
 
-module Gen2.Compactor where
+-- Pure, except for loadBase
+module Gen2.Compactor (loadBase, compact, renderBase) where
 
 import           DynFlags
 
@@ -451,4 +452,3 @@ compact :: GhcjsSettings
         -> (CompactorState, [JStat], JStat) -- ^ renamer state, statements for each unit, metadata
 compact settings dflags rs input =
   renameInternals settings dflags rs input
-

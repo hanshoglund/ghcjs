@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP, GADTs, OverloadedStrings, LambdaCase, TupleSections,
              ScopedTypeVariables, ViewPatterns #-}
 
-module Gen2.TH where
+module Gen2.TH(convertTH, convertE, convertP, convertT, convertD, ghcjsRunMeta, ghcjsGetValueSafely, finishTh) where
 
 {-
   Template Haskell support through Node.js
@@ -86,7 +86,7 @@ import qualified Language.Haskell.TH.Syntax     as TH
 
 import           System.Process
   (runInteractiveProcess, terminateProcess, waitForProcess)
-                                                
+
 import           System.FilePath
 import           System.IO
 import           System.IO.Error
@@ -110,18 +110,23 @@ import           TcSplice
 #if __GLASGOW_HASKELL__ >= 709
 -- GHC 7.10 has a new runMetaHook
 
+-- IONOTE talks to ouside runner (node.js etc)
 convertE :: SrcSpan -> ByteString -> TcM (LHsExpr RdrName)
 convertE = convertTH (get :: Get TH.Exp)   convertToHsExpr
 
+-- IONOTE talks to ouside runner (node.js etc)
 convertP :: SrcSpan -> ByteString -> TcM (LPat RdrName)
 convertP = convertTH (get :: Get TH.Pat)   convertToPat
 
+-- IONOTE talks to ouside runner (node.js etc)
 convertT :: SrcSpan -> ByteString -> TcM (LHsType RdrName)
 convertT = convertTH (get :: Get TH.Type)  convertToHsType
 
+-- IONOTE talks to ouside runner (node.js etc)
 convertD :: SrcSpan -> ByteString -> TcM [LHsDecl RdrName]
 convertD = convertTH (get :: Get [TH.Dec]) convertToHsDecls
 
+-- IONOTE talks to ouside runner (node.js etc)
 convertTH :: Binary a
           => Get a
           -> (SrcSpan -> a -> Either MsgDoc b)
@@ -136,6 +141,7 @@ convertTH g f s b
 convertAnn :: SrcSpan -> ByteString -> TcM Serialized
 convertAnn _ bs = return (toSerialized B.unpack bs)
 
+-- IONOTE talks to ouside runner (node.js etc)
 ghcjsRunMeta :: GhcjsEnv
              -> GhcjsSettings
              -> MetaRequest
@@ -382,6 +388,7 @@ endRecover recoveryTaken (thrRecover -> r) = do
     unionMessages (wm1, em1) (wm2, em2) = (unionBags wm1 wm2, unionBags em1 em2)
 
 -- | instruct the runner to finish up
+-- IONOTE talks to ouside runner (node.js etc)
 finishTh :: GhcjsEnv -> String -> ThRunner -> IO ()
 finishTh js_env m runner = do
     let ph = thrProcess runner
@@ -659,10 +666,12 @@ notInScope th_name = quotes (text (TH.pprint th_name)) <+>
 
 #endif
 
+-- IONOTE talks to ouside node.js or similar
 sendToRunner :: ThRunner -> Int -> TH.Message -> IO ()
 sendToRunner runner responseTo msg =
   sendToRunnerRaw runner responseTo (BL.toStrict . runPut . put $ msg)
 
+-- IONOTE talks to ouside node.js or similar
 sendToRunnerRaw :: ThRunner -> Int -> ByteString -> IO ()
 sendToRunnerRaw runner responseTo bs = do
   let header = BL.toStrict . runPut $ do
@@ -671,6 +680,7 @@ sendToRunnerRaw runner responseTo bs = do
   B.hPut (thrHandleIn runner) (B16.encode $ header <> bs)
   hFlush (thrHandleIn runner)
 
+-- IONOTE talks to ouside node.js or similar
 readFromRunner :: ThRunner -> IO (TH.Message, Int)
 readFromRunner runner = do
   let h = thrHandleErr runner
@@ -683,6 +693,7 @@ thSettings = GhcjsSettings False True False False Nothing
                            Nothing NoBase
                            Nothing Nothing []
 
+-- IONOTE connects to ouside node.js or similar
 startThRunner :: DynFlags -> GhcjsEnv -> HscEnv -> IO ThRunner
 startThRunner dflags js_env hsc_env = do
   lr <- linkTh js_env thSettings [] dflags [] (hsc_HPT hsc_env) Nothing
@@ -704,6 +715,7 @@ startThRunner dflags js_env hsc_env = do
   sendToRunnerRaw r 0 (BL.toStrict $ rtsd <> fr <> rts <> fa <> aa <> Gen2.linkOut lr)
   return r
 
+-- IONOTE OK does nothing
 ghcjsGetValueSafely :: GhcjsSettings
                     -> HscEnv
                     -> Name
@@ -711,4 +723,3 @@ ghcjsGetValueSafely :: GhcjsSettings
                     -> IO (Maybe HValue)
 ghcjsGetValueSafely _settings _hsc_env _name _t = do
   return Nothing -- fixme
-

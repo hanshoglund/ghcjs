@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Compiler.Program where
+module Compiler.Program (main) where
 
 import qualified Compiler.GhcjsProgram  as Ghcjs
 import qualified Compiler.GhcjsPlatform as Ghcjs
