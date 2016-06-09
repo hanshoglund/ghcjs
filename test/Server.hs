@@ -41,6 +41,7 @@ import           Text.Read
 
 import           Prelude hiding (FilePath)
 import           Filesystem.Path
+import Filesystem.Path.CurrentOS (encodeString)
 
 {-
    Start the test server with static file root path on the next
@@ -74,7 +75,7 @@ handleReq path req resp
     pi  = Network.Wai.pathInfo req
 
 handleStatic :: FilePath -> Network.Wai.Application
-handleStatic path = Static.staticApp (Static.defaultFileServerSettings path)
+handleStatic path = Static.staticApp (Static.defaultFileServerSettings $ encodeString path)
 
 handleEmpty :: Network.Wai.Application
 handleEmpty req resp =
@@ -223,4 +224,3 @@ readMaybeT = readMaybe . T.unpack
 invalidMethod :: (W.Response -> IO W.ResponseReceived) -> IO W.ResponseReceived
 invalidMethod respond = respond $
   W.responseLBS HTTP.methodNotAllowed405 [] "Method not allowed"
-
