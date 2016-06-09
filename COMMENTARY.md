@@ -163,6 +163,13 @@
     doShowIface
     etc (for full list, see the case statement dispatching on PostLoadMode, or the PostLoadMode definition)
 
+- Booting
+  Performs lots of different setup steps (TODO overview)
+  No hardcoded paths, they are all set in the BootEnv type (TODO check more closely which paths are relevant to GHCJS)
+
+- Testing?
+
+- Docs/Low-level docs?
 
 - Use with Stack
   TODO investigate exactly what happens here
