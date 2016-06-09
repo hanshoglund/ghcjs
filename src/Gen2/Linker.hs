@@ -11,7 +11,7 @@
     units with dependency information
 -}
 
-module Gen2.Linker(link, link', mkPackage, LinkResult(..)) where
+module Gen2.Linker(link, link', mkPackage, LinkResult(..), thDeps, rtsText') where
 
 import           DynFlags
 import           Encoding
